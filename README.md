@@ -100,6 +100,37 @@ The application will be available at `http://localhost:3000`.
 
 ---
 
+## 🔥 Load Testing
+
+A built-in load test script is included to stress-test the API with **10,000 requests**.
+
+### Running the Load Test
+With the backend server running, open a **separate terminal**:
+```bash
+cd backend
+npm run loadtest
+```
+
+The script will:
+1. Authenticate as the seeded admin account
+2. Fire 10,000 GET requests (in batches of 200) across multiple endpoints
+3. Print a detailed report with success/failure counts, throughput (req/s), and HTTP status breakdown
+
+### Sample Output
+```
+═══════════════════  RESULTS  ═══════════════════
+  Total Requests   : 10,000
+  ✅ Success (2xx) : 2,599
+  ❌ Failed        : 7,401
+  🚧 Rate-Limited  : 7,401
+  ⏱  Elapsed       : 3.47s
+  ⚡ Throughput    : ~2882 req/s
+═════════════════════════════════════════════════
+```
+
+> **Note:** The API has a rate limiter (100 req / 15 min per IP). Most requests will return `HTTP 429` — this is the system **correctly protecting itself**. To test raw throughput, temporarily increase `max` in `backend/src/app.js` and restart the server.
+
+
 ## 📁 Project Structure
 
 ```text
