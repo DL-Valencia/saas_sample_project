@@ -7,10 +7,12 @@ import Dashboard from './pages/Dashboard';
 import Applications from './pages/Applications';
 import UserManagement from './pages/UserManagement';
 import PrivateRoute from './components/PrivateRoute';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <Provider store={store}>
+      <Toaster position="top-right" reverseOrder={false} />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />

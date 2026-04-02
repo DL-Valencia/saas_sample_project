@@ -131,6 +131,28 @@ The script will:
 > **Note:** The API has a rate limiter (100 req / 15 min per IP). Most requests will return `HTTP 429` — this is the system **correctly protecting itself**. To test raw throughput, temporarily increase `max` in `backend/src/app.js` and restart the server.
 
 
+## 🧪 Security Testing
+
+The project includes specialized scripts to test for **NoSQL Injection** vulnerabilities and verify core authentication logic.
+
+### 1. NoSQL Injection Audit
+This script attempts to bypass login using malicious MongoDB query operators (e.g., `$gt`, `$ne`). It verifies that the server's **custom sanitization middleware** correctly strips these operators.
+```bash
+cd backend
+npm run securitytest
+```
+
+### 2. Standard Login Verification
+Ensures that the security measures do not interfere with legitimate login attempts.
+```bash
+cd backend
+npm run testlogin
+```
+
+> [!TIP]
+> Always run these tests after making changes to `app.js` or the Authentication controller to ensure the system remains both secure and functional.
+
+
 ## 📁 Project Structure
 
 ```text
@@ -160,6 +182,7 @@ SaaS_Dashboard/
 - **RBAC**: Middleware-enforced permissions at the route and controller level.
 - **Validation**: Strict request body validation.
 - **Helmet**: Securing HTTP headers.
+- **NoSQL Sanitization**: Custom recursive middleware to strip malicious query operators from `req.body`, `req.query`, and `req.params`.
 - **Rate Limiting**: Protection against brute-force attacks.
 
 ---

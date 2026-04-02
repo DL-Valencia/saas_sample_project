@@ -16,22 +16,24 @@ const seedData = async () => {
         await Application.deleteMany();
 
         // Create Users
-        const salt = await bcrypt.genSalt(10);
-        const superAdminPassword = await bcrypt.hash('admin123', salt);
-        const userPassword = await bcrypt.hash('user123', salt);
-
         const superAdmin = await User.create({
             name: 'Super Admin',
-            email: 'admin@example.com',
-            password: 'admin123', // Pre-save hook will hash it
+            email: process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
+            password: process.env.SEED_ADMIN_PASSWORD || 'admin123', // Pre-save hook will hash it
             role: 'SuperAdmin',
+            companyName: 'Admin Solutions Corp',
+            companyAddress: '123 Admin St, Tech City',
+            tinNumber: '123456789012',
         });
 
         const normalUser = await User.create({
             name: 'John Doe',
-            email: 'user@example.com',
-            password: 'user123',
+            email: process.env.SEED_USER_EMAIL || 'user@example.com',
+            password: process.env.SEED_USER_PASSWORD || 'user123',
             role: 'User',
+            companyName: 'John Doe Enterprise',
+            companyAddress: '456 User Lane, Sandbox Inc',
+            tinNumber: '987654321098',
         });
 
         console.log('Users created.');

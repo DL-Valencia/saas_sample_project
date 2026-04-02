@@ -7,7 +7,9 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/seed.js",
-    "loadtest": "node src/loadtest.js"
+    "loadtest": "node src/loadtest.js",
+    "securitytest": "node src/nosql_injection_test.js",
+    "testlogin": "node src/standard_login_test.js"
   },
   "keywords": [],
   "author": "",

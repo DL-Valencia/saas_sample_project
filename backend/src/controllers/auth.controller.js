@@ -6,7 +6,11 @@ const jwt = require('jsonwebtoken');
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, companyName, companyAddress, tinNumber } = req.body;
+
+    if (!name || !email || !password || !companyName || !companyAddress || !tinNumber) {
+        return res.status(400).json({ message: 'Please provide name, email, password, company name, address, and TIN' });
+    }
 
     const userExists = await User.findOne({ email });
 
@@ -19,6 +23,9 @@ const registerUser = async (req, res) => {
         email,
         password,
         role: role || 'User',
+        companyName,
+        companyAddress,
+        tinNumber,
     });
 
     if (user) {

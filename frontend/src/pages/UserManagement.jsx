@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
-import { 
-  Users, UserPlus, Mail, ShieldCheck, MoreVertical, 
-  X, Loader2, AlertCircle, Eye, EyeOff
+import {
+  Users, UserPlus, Mail, ShieldCheck, MoreVertical,
+  X, Loader2, AlertCircle, Eye, EyeOff,
+  Pencil, Trash2, Lock, Unlock, AlertTriangle
 } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
 const getAuthHeaders = () => {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -13,23 +15,57 @@ const getAuthHeaders = () => {
 
 // ─── Invite User Modal ─────────────────────────────────────────────────────
 const InviteUserModal = ({ onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'User' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'User',
+    companyName: '',
+    companyAddress: '',
+    tinNumber: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState(null);
+
+  const getFieldError = (name) => {
+    if (!isSubmitted) return false;
+    return !formData[name];
+  };
+
+  const inputClass = (name) => `
+    bg-slate-900 border text-white w-full rounded-xl py-3 px-4
+    focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all
+    ${getFieldError(name) ? 'border-red-500 ring-2 ring-red-500/20' : 'border-slate-700'}
+  `;
 
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitted(true);
+
+    // Client-side required check
+    const requiredFields = ['name', 'email', 'password', 'companyName', 'companyAddress', 'tinNumber'];
+    const missing = requiredFields.filter(f => !formData[f]);
+
+    if (missing.length > 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       await axios.post('/api/users', formData, getAuthHeaders());
+      toast.success('User invited successfully!');
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create user');
+      const msg = err.response?.data?.message || 'Failed to create user';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -56,9 +92,8 @@ const InviteUserModal = ({ onClose, onSuccess }) => {
 
           <div>
             <label className="text-sm font-medium text-slate-300 mb-1 block">Full Name</label>
-            <input name="name" required value={formData.name} onChange={onChange}
-              className="bg-slate-900 border border-slate-700 text-white w-full rounded-xl py-3 px-4
-                         focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
+            <input name="name" value={formData.name} onChange={onChange}
+              className={inputClass('name')}
               placeholder="John Doe" />
           </div>
 
@@ -66,9 +101,8 @@ const InviteUserModal = ({ onClose, onSuccess }) => {
             <label className="text-sm font-medium text-slate-300 mb-1 block">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-              <input name="email" type="email" required value={formData.email} onChange={onChange}
-                className="bg-slate-900 border border-slate-700 text-white w-full rounded-xl py-3 pl-10 pr-4
-                           focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
+              <input name="email" type="email" value={formData.email} onChange={onChange}
+                className={`pl-10 ${inputClass('email')}`}
                 placeholder="user@company.com" />
             </div>
           </div>
@@ -76,16 +110,38 @@ const InviteUserModal = ({ onClose, onSuccess }) => {
           <div>
             <label className="text-sm font-medium text-slate-300 mb-1 block">Password</label>
             <div className="relative">
-              <input name="password" type={showPassword ? 'text' : 'password'} required minLength={6}
+              <input name="password" type={showPassword ? 'text' : 'password'} minLength={6}
                 value={formData.password} onChange={onChange}
-                className="bg-slate-900 border border-slate-700 text-white w-full rounded-xl py-3 px-4 pr-12
-                           focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
+                className={`pr-12 ${inputClass('password')}`}
                 placeholder="Min. 6 characters" />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-slate-300 mb-1 block">Company Name</label>
+              <input name="companyName" value={formData.companyName} onChange={onChange} maxLength={50}
+                className={inputClass('companyName')}
+                placeholder="Acme Corp" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-300 mb-1 block">TIN Number</label>
+              <input name="tinNumber" value={formData.tinNumber} onChange={onChange} maxLength={12}
+                pattern="\d*"
+                className={inputClass('tinNumber')}
+                placeholder="12-digit number" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-300 mb-1 block">Company Address</label>
+            <input name="companyAddress" value={formData.companyAddress} onChange={onChange} maxLength={50}
+              className={inputClass('companyAddress')}
+              placeholder="123 Business Rd, Suite 100" />
           </div>
 
           <div>
@@ -120,16 +176,29 @@ const InviteUserModal = ({ onClose, onSuccess }) => {
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
 
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
       const response = await axios.get('/api/users', getAuthHeaders());
       setUsers(response.data);
     } catch (err) {
-      console.error(err);
+      toast.error('Failed to fetch users');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const toggleActive = async (user) => {
+    try {
+      await axios.patch(`/api/users/${user._id}`, { isActive: !user.isActive }, getAuthHeaders());
+      toast.success(user.isActive ? 'Account suspended' : 'Account activated');
+      fetchUsers();
+    } catch (err) {
+      toast.error('Operation failed');
     }
   };
 
@@ -157,7 +226,7 @@ const UserManagement = () => {
           <p className="text-slate-400 mt-1">Manage system access and permissions.</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsInviteModalOpen(true)}
           className="btn btn-primary shadow-lg shadow-primary-500/20 flex items-center">
           <UserPlus size={20} className="mr-2" />
           Invite User
@@ -165,8 +234,14 @@ const UserManagement = () => {
       </div>
 
       <AnimatePresence>
-        {isModalOpen && (
-          <InviteUserModal onClose={() => setIsModalOpen(false)} onSuccess={fetchUsers} />
+        {isInviteModalOpen && (
+          <InviteUserModal onClose={() => setIsInviteModalOpen(false)} onSuccess={fetchUsers} />
+        )}
+        {editingUser && (
+          <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSuccess={fetchUsers} />
+        )}
+        {deletingUser && (
+          <DeleteConfirmModal user={deletingUser} onClose={() => setDeletingUser(null)} onSuccess={fetchUsers} />
         )}
       </AnimatePresence>
 
@@ -201,9 +276,8 @@ const UserManagement = () => {
           <div className="space-y-2">
             {Object.entries(roleCounts).map(([role, count]) => (
               <div key={role} className="flex items-center justify-between text-sm">
-                <span className={`font-medium ${
-                  role === 'SuperAdmin' ? 'text-purple-400' : role === 'Admin' ? 'text-primary-400' : 'text-slate-300'
-                }`}>{role}</span>
+                <span className={`font-medium ${role === 'SuperAdmin' ? 'text-purple-400' : role === 'Admin' ? 'text-primary-400' : 'text-slate-300'
+                  }`}>{role}</span>
                 <span className="text-white font-bold">{count}</span>
               </div>
             ))}
@@ -218,9 +292,8 @@ const UserManagement = () => {
             <thead>
               <tr className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-semibold">User</th>
+                <th className="px-6 py-4 font-semibold">Company</th>
                 <th className="px-6 py-4 font-semibold">Role</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold">Last Login</th>
                 <th className="px-6 py-4 font-semibold text-right">Action</th>
               </tr>
             </thead>
@@ -251,29 +324,25 @@ const UserManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`flex items-center text-xs font-semibold ${
-                        user.role === 'SuperAdmin' ? 'text-purple-400' :
+                      <div className="text-sm text-white font-medium">{user.companyName || 'N/A'}</div>
+                      <div className="text-xs text-slate-500 line-clamp-1">{user.companyAddress || '-'}</div>
+                      <div className="text-[10px] text-primary-400 mt-0.5">TIN: {user.tinNumber || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`flex items-center text-xs font-semibold ${user.role === 'SuperAdmin' ? 'text-purple-400' :
                         user.role === 'Admin' ? 'text-primary-400' : 'text-slate-400'
-                      }`}>
+                        }`}>
                         <ShieldCheck size={14} className="mr-1" />
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`flex items-center text-xs font-medium ${
-                        loggedInRecently ? 'text-emerald-500' : 'text-slate-500'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                          loggedInRecently ? 'bg-emerald-500' : 'bg-slate-600'
-                        }`}></span>
-                        {loggedInRecently ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
-                    </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 hover:bg-slate-700 rounded-lg text-slate-400"><MoreVertical size={18} /></button>
+                      <ActionMenu 
+                        user={user} 
+                        onEdit={() => setEditingUser(user)}
+                        onDelete={() => setDeletingUser(user)}
+                        onToggleActive={() => toggleActive(user)}
+                      />
                     </td>
                   </tr>
                 );
