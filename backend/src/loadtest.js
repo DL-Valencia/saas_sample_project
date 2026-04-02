@@ -18,6 +18,7 @@
  * ──────────────────────────────────────────────────────────────
  */
 
+require('dotenv').config();
 const http = require('http');
 
 const BASE = 'http://localhost:5000';
@@ -46,7 +47,9 @@ function parseUrl(urlStr) {
 // ── login ───────────────────────────────────────────────────────
 async function login() {
   const { hostname, port, path } = parseUrl(`${BASE}/api/auth/login`);
-  const body = JSON.stringify({ email: 'admin@example.com', password: 'admin123' });
+  const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+  const password = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+  const body = JSON.stringify({ email, password });
 
   const res = await httpRequest(
     { hostname, port, path, method: 'POST', headers: { 'Content-Type': 'application/json' } },
@@ -77,7 +80,8 @@ async function main() {
   console.log('╚══════════════════════════════════════════════╝\n');
 
   // 1. Authenticate
-  console.log('🔐 Logging in as admin@example.com …');
+  const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+  console.log(`🔐 Logging in as ${email} …`);
   const token = await login();
   console.log('✅ Token acquired.\n');
 

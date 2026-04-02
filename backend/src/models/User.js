@@ -35,7 +35,23 @@ const userSchema = new mongoose.Schema({
     },
     lastLogin: {
         type: Date
-    }
+    },
+    companyName: {
+        type: String,
+        required: [true, 'Please add a company name'],
+        maxlength: [50, 'Company Name cannot exceed 50 characters'],
+    },
+    companyAddress: {
+        type: String,
+        required: [true, 'Please add a company address'],
+        maxlength: [50, 'Company Address cannot exceed 50 characters'],
+    },
+    tinNumber: {
+        type: String,
+        required: [true, 'Please add a TIN number'],
+        maxlength: [12, 'TIN Number cannot exceed 12 characters'],
+        match: [/^\d{0,12}$/, 'TIN Number must be numeric and up to 12 digits'],
+    },
 }, {
     timestamps: true,
 });
